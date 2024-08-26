@@ -2,9 +2,12 @@ import subprocess
 import pyttsx3
 import smtplib
 import cv2
+from flask import Flask
+from googlesearch import search
 imagePath = 'input_image.jpg'
 
-from googlesearch import search
+app= Flask(__name__)
+@app.route('/sendmail', methods=["POST"])
 #1_________________________________________________________
 def sendEmail():
     email_id = input("Enter your email id:")
@@ -21,11 +24,17 @@ def sendEmail():
     server.close()
     return True
 #2_________________________________________________________
-def searchresults1(searchtext):
-	search(searchtext,num_results=5)
+@app.route("/googlesearch",methods=["POST"])
+def searchresults1():
+    searchtext=request.form.get('searchtext')
+	return search(searchtext,num_results=5)
+
 #3_________________________________________________________
+@app.route("/textmessages",methods=["POST"])
 def textmessages():
-	client = vonage.Client(key="^^^^^$#@", secret="*****")
+    apikey=request.getform.get('apikey')
+    secretkey=request.getform.get('secretkey')
+	client = vonage.Client(key=apikey, secret=secretkey)
 	sms = vonage.Sms(client)
 	responseData = sms.send_message(
     {
@@ -36,12 +45,9 @@ def textmessages():
 )
 
 if responseData["messages"][0]["status"] == "0":
-    print("Message sent successfully.")
+    return("Message sent successfully.")
 else:
-    print(f"Message failed with error: {responseData['messages'][0]['error-text']}")
-
-
-
+    return(f"Message failed with error: {responseData['messages'][0]['error-text']}")
 
 
 
@@ -50,10 +56,12 @@ else:
 
 
 #6_________________________________________________________
-volume=input("enter the amount of volume in words or in %")
-pwshellcmd="Setvol"+volume
-subprocess.run(pwshellcmd)
-
+@app.route("/setvolume",methods=["POST"])
+def setvolume():
+    volume=input("enter the amount of volume in words or in %")
+    pwshellcmd="Setvol"+volume
+    subprocess.run(pwshellcmd)
+    return "volume set successfully"
 #2_________________________________________________________
 def textToSpeech(inputstring):
     engine=pyttsx3.init()
